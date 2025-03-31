@@ -1,71 +1,49 @@
-// src/__tests__/server.test.ts
-import { getMockReqRes } from '@jest-mock/express';
-import { expect, jest, test } from '@jest/globals';
+import { expect, test, jest, describe, beforeEach } from '@jest/globals';
+import { Server } from '../server/server.js';
+import { Implementation } from '../types.js';
 
-// Мокуємо модуль express
-jest.mock('express', () => {
-  const mockExpress = jest.fn(() => ({
-    use: jest.fn(),
-    get: jest.fn(),
-    post: jest.fn(),
-    listen: jest.fn(() => ({ close: jest.fn() })),
-  }));
-  
-  mockExpress.json = jest.fn();
-  mockExpress.urlencoded = jest.fn();
-  mockExpress.Router = jest.fn(() => ({
-    use: jest.fn(),
-    get: jest.fn(),
-    post: jest.fn(),
-  }));
-  
-  return mockExpress;
-});
+describe('Server class tests', () => {
+  let server: Server;
+  const mockServerInfo: Implementation = {
+    name: 'TestServer',
+    version: '1.0.0',
+  };
 
-// Імпортуємо сервер після моків для коректного тестування
-import { createServer } from '../server.js';
-
-describe('MCP Server', () => {
-  // Очищуємо моки перед кожним тестом
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
-  
-  test('createServer повертає екземпляр сервера', () => {
-    const server = createServer({
-      port: 3000
-    });
-    
-    expect(server).toBeDefined();
+    server = new Server(mockServerInfo);
   });
 
-  test('Сервер обробляє запит healthz', async () => {
-    // Створюємо мок для req і res
-    const { req, res } = getMockReqRes();
-    
-    // Налаштовуємо мок для JSON відповіді
-    res.json = jest.fn();
-    res.status = jest.fn().mockReturnValue(res);
-    
-    // Отримуємо обробник маршруту healthz
-    const server = createServer({ port: 3000 });
-    
-    // Знаходимо правильний обробник для маршруту healthz
-    const expressInstance = require('express')();
-    const healthzHandler = expressInstance.get.mock.calls.find(
-      call => call[0] === '/healthz'
-    )?.[1];
-    
-    if (healthzHandler) {
-      // Викликаємо обробник з моками req і res
-      await healthzHandler(req, res);
-      
-      // Перевіряємо, що був повернутий статус 200
-      expect(res.status).toHaveBeenCalledWith(200);
-      // Перевіряємо, що була повернута правильна відповідь
-      expect(res.json).toHaveBeenCalledWith({ status: 'ok' });
-    } else {
-      fail('Обробник для маршруту /healthz не знайдено');
-    }
+  test('Server має бути успішно створений', () => {
+    expect(server).toBeDefined();
+    expect(server).toBeInstanceOf(Server);
+  });
+
+  test('Server має правильні методи', () => {
+    expect(typeof server.ping).toBe('function');
+    expect(typeof server.createMessage).toBe('function');
+    expect(typeof server.listRoots).toBe('function');
+    expect(typeof server.sendLoggingMessage).toBe('function');
+    expect(typeof server.sendResourceUpdated).toBe('function');
+    expect(typeof server.sendResourceListChanged).toBe('function');
+    expect(typeof server.sendToolListChanged).toBe('function');
+    expect(typeof server.sendPromptListChanged).toBe('function');
+  });
+
+  test('Server може реєструвати можливості', () => {
+    // Перевіряємо, що не викидається помилка при реєстрації можливостей
+    expect(() => {
+      server.registerCapabilities({
+        logging: true,
+        tools: true,
+      });
+    }).not.toThrow();
+  });
+
+  test('getClientCapabilities має повертати undefined до ініціалізації', () => {
+    expect(server.getClientCapabilities()).toBeUndefined();
+  });
+
+  test('getClientVersion має повертати undefined до ініціалізації', () => {
+    expect(server.getClientVersion()).toBeUndefined();
   });
 });
