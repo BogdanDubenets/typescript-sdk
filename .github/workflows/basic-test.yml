@@ -1,0 +1,64 @@
+name: Basic Test
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  basic-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Create minimal test file
+      run: |
+        mkdir -p src/__tests__
+        cat > src/__tests__/super-minimal.test.ts << 'EOL'
+        test('1 + 1 повинно дорівнювати 2', () => {
+          expect(1 + 1).toBe(2);
+        });
+        EOL
+        
+    - name: Create minimal Jest config
+      run: |
+        cat > jest.config.minimal.js << 'EOL'
+        /** @type {import('jest').Config} */
+        const config = {
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\.(ts|tsx)$': 'ts-jest'
+          },
+          testMatch: ['**/super-minimal.test.ts'],
+          moduleFileExtensions: ['ts', 'js'],
+          collectCoverage: false,
+          verbose: true,
+          globals: {
+            'ts-jest': {
+              isolatedModules: true,
+              diagnostics: false
+            }
+          }
+        };
+        module.exports = config;
+        EOL
+        
+    - name: Run basic test
+      run: npx jest --config=jest.config.minimal.js --no-cache
+      
+    - name: Show Jest version
+      run: npx jest --version
+      
+    - name: Show TypeScript version
+      run: npx tsc --version
+      
+    - name: Show ts-jest version
+      run: npm list ts-jest
