@@ -1,7 +1,7 @@
 {
   "name": "@modelcontextprotocol/sdk",
   "version": "1.8.0",
-  "description": "Model Context Protocol implementation for TypeScript",
+  "description": "Model Context Protocol implementation for TypeScript with Amadeus API integration",
   "license": "MIT",
   "author": "Anthropic, PBC (https://anthropic.com)",
   "homepage": "https://modelcontextprotocol.io",
@@ -16,7 +16,9 @@
   },
   "keywords": [
     "modelcontextprotocol",
-    "mcp"
+    "mcp",
+    "amadeus",
+    "travel"
   ],
   "exports": {
     "./*": {
@@ -43,9 +45,11 @@
     "test": "jest",
     "start": "npm run server",
     "server": "tsx watch --clear-screen=false src/cli.ts server",
-    "client": "tsx src/cli.ts client"
+    "client": "tsx src/cli.ts client",
+    "amadeus": "tsx src/amadeus/server.ts"
   },
   "dependencies": {
+    "amadeus": "^8.0.0",
     "content-type": "^1.0.5",
     "cors": "^2.8.5",
     "cross-spawn": "^7.0.3",
